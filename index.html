@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Soumee · 90 days of AI, in public</title>
+<meta name="description" content="Daily notes on system design, ML, and GenAI from a data scientist.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#f7f4ec; --card:#fffdf8; --ink:#14313a; --muted:#5d6f74; --line:#ddd6c4;
+  --taxi:#f2b705; --taxi-ink:#14313a;
+  --head:"Bricolage Grotesque",system-ui,sans-serif; --body:"Source Serif 4",Georgia,serif;
+}
+@media (prefers-color-scheme:dark){
+  :root{--paper:#0f2228; --card:#162e36; --ink:#f1ecdd; --muted:#9db0b4; --line:#2a4650;}
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font:18px/1.6 var(--body)}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--taxi);outline-offset:2px}
+.wrap{max-width:1040px;margin:0 auto;padding:0 20px}
+header{padding:56px 0 28px}
+h1{font:800 clamp(2.2rem,6vw,4rem)/1.02 var(--head);letter-spacing:-.02em;margin:0 0 14px;max-width:14ch}
+.lede{max-width:52ch;color:var(--muted);margin:0}
+h2{font:700 1.5rem/1.2 var(--head);margin:0 0 14px}
+section{padding:26px 0}
+
+/* progress grid: the one memorable element */
+.tracker{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
+.tracker-top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.count{font:800 2.4rem/1 var(--head)}
+.count small{font:500 1rem var(--body);color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(15,1fr);gap:5px}
+.sq{aspect-ratio:1;border-radius:4px;border:1px solid var(--line);background:transparent;display:block}
+.sq.done{background:var(--taxi);border-color:var(--taxi)}
+.sq{padding:0}
+.sq.done{cursor:pointer}
+.sq.done:hover{transform:scale(1.15)}
+[hidden]{display:none!important}
+.views{display:flex;gap:8px;margin:0 0 14px}
+.view{font:500 .9rem var(--head);padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}
+.view[aria-pressed="true"]{background:var(--taxi);border-color:var(--taxi);color:var(--taxi-ink)}
+a.chip{text-decoration:none}
+button.card{font:inherit;color:inherit;text-align:left;cursor:pointer;width:100%}
+button.card:hover{border-color:var(--ink);border-left-color:var(--c)}
+details.folder{background:var(--card);border:1px solid var(--line);border-left:6px solid var(--c);border-radius:10px;margin-bottom:10px}
+details.folder summary{cursor:pointer;padding:14px 18px;font:700 1.05rem var(--head);display:flex;justify-content:space-between;gap:12px}
+details.folder ul{list-style:none;margin:0;padding:0 18px 12px}
+details.folder li button{font:inherit;color:inherit;background:none;border:0;padding:6px 0;cursor:pointer;text-align:left;text-decoration:underline;text-decoration-color:var(--line)}
+dialog{border:1px solid var(--line);border-radius:14px;background:var(--card);color:var(--ink);width:min(640px,92vw);max-height:85vh;padding:0}
+dialog::backdrop{background:rgba(10,25,30,.55)}
+.dlg-in{padding:22px 24px}
+.dlg-in h3{font:800 1.5rem/1.2 var(--head);margin:6px 0 14px}
+.dact{display:flex;gap:8px;margin-top:18px}
+@media (max-width:520px){.grid{grid-template-columns:repeat(10,1fr)}}
+
+/* filters */
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px}
+.chip{font:500 .9rem var(--head);padding:7px 13px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+
+/* cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-left:6px solid var(--c,var(--taxi));border-radius:10px;padding:16px 18px;display:flex;flex-direction:column;gap:6px;text-decoration:none}
+a.card:hover{border-color:var(--ink);border-left-color:var(--c,var(--taxi))}
+.meta{font:500 .85rem var(--head);color:var(--muted)}
+.card h3{font:700 1.1rem/1.3 var(--head);margin:0}
+.card p{margin:0;font-size:.95rem;color:var(--muted)}
+.empty{color:var(--muted);padding:12px 0}
+
+/* hub cards */
+.hub .card{border-left-width:1px;border-top:6px solid var(--taxi)}
+footer{padding:36px 0 56px;color:var(--muted);font-size:.9rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>90 days of AI, in public.</h1>
+  <p class="lede">I'm Soumee, a data scientist in Kolkata. Every day I write up one thing I learned: system design, ML, GenAI, and the code behind them.</p>
+</header>
+
+<section aria-labelledby="t">
+  <h2 id="t">Progress</h2>
+  <div class="tracker">
+    <div class="tracker-top">
+      <div class="count"><span id="n">0</span> <small>of 90 days written</small></div>
+      <div class="meta" id="start"></div>
+    </div>
+    <div class="grid" id="grid" aria-label="90 day tracker"></div>
+  </div>
+</section>
+
+<section aria-labelledby="l">
+  <h2 id="l">The 90-day log</h2>
+  <div class="views" id="views" role="group" aria-label="Choose view">
+    <button class="view" data-v="cards" aria-pressed="true">Day cards</button>
+    <button class="view" data-v="folders" aria-pressed="false">Topic folders</button>
+  </div>
+  <div class="chips" id="chips" role="group" aria-label="Filter by topic"></div>
+  <div class="cards" id="log"></div>
+  <div id="folders" hidden></div>
+</section>
+
+<section class="hub" aria-labelledby="h">
+  <h2 id="h">More from me</h2>
+  <div class="cards" id="hub"></div>
+</section>
+
+<footer>Built with plain HTML and hosted on GitHub Pages.</footer>
+</div>
+
+<dialog id="dlg" aria-labelledby="dtitle">
+  <div class="dlg-in">
+    <span class="meta" id="dmeta"></span>
+    <h3 id="dtitle"></h3>
+    <div id="dbody"></div>
+    <div class="dact">
+      <a class="chip" id="dlink" target="_blank" rel="noopener" hidden>Read on Medium</a>
+      <button class="chip" id="dclose">Close</button>
+    </div>
+  </div>
+</dialog>
+
+<script>
+/* ============ EDIT THIS PART ============ */
+const START_DATE = "";   // e.g. "2026-10-05" (leave "" to hide)
+
+// Add one line per day. Newest at the bottom.
+// topic must be one of the keys in TOPICS below.
+// body = your full notes for the day (leave a blank line between paragraphs).
+// url = optional Medium link. Avoid the ` character inside body.
+const DAYS = [
+  {
+    day: 1, topic: "HLD", title: "How a URL shortener works",
+    note: "Hashing, base62, and read-heavy design.",
+    url: "",
+    body: `Sample entry: replace this with what you learned today.
+
+A short URL is a key into a key-value store. Generate the key with a counter encoded in base62, and cache hot keys because reads far outnumber writes.`
+  },
+];
+
+const TOPICS = {
+  "HLD":"#d9822b", "LLD":"#b5483a", "LeetCode":"#3b7f6b", "Case study":"#7a5ea8",
+  "ML basics":"#2f6fa3", "GenAI":"#c2358a", "ML system design":"#14313a",
+  "Production":"#6b7a2a", "Statistics":"#a07a1a", "Evals":"#2a8f9a"
+};
+
+// Cards in "More from me". Add new ones anytime (projects, travel, poems...).
+const HUB = [
+  { title:"Resume", note:"Data scientist. View or download the PDF.", url:"resume.pdf", meta:"PDF" },
+  { title:"Medium", note:"All my posts live here.", url:"https://medium.com/@soumeeghosh.intern", meta:"Writing" },
+  { title:"GitHub", note:"Code for my projects.", url:"https://github.com/Soumee99", meta:"Code" },
+  { title:"LinkedIn", note:"Short daily versions of each post.", url:"https://www.linkedin.com/in/soumee-ghosh-b11547209", meta:"Network" }
+];
+/* ========================================= */
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+$("n").textContent = DAYS.length;
+if (START_DATE) $("start").textContent = "Started " + new Date(START_DATE).toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"});
+
+// 90-square tracker
+const byDay = Object.fromEntries(DAYS.map(d => [d.day, d]));
+$("grid").innerHTML = Array.from({length:90}, (_, i) => {
+  const d = byDay[i+1];
+  if (!d) return `<span class="sq" title="Day ${i+1}"></span>`;
+  return `<button class="sq done" data-open="${i+1}" title="Day ${i+1}: ${esc(d.title)}" aria-label="Day ${i+1}: ${esc(d.title)}"></button>`;
+}).join("");
+
+// topic filters
+let active = "All";
+function renderChips(){
+  const used = ["All", ...Object.keys(TOPICS).filter(t => DAYS.some(d => d.topic === t))];
+  $("chips").innerHTML = used.map(t => `<button class="chip" aria-pressed="${t===active}" data-t="${esc(t)}">${esc(t)}</button>`).join("");
+}
+$("chips").addEventListener("click", e => {
+  const b = e.target.closest(".chip"); if (!b) return;
+  active = b.dataset.t; renderChips(); renderLog();
+});
+
+function renderLog(){
+  const list = DAYS.filter(d => active === "All" || d.topic === active).slice().reverse();
+  if (!list.length){ $("log").innerHTML = `<p class="empty">Day 1 is coming soon.</p>`; return; }
+  $("log").innerHTML = list.map(d => `<button class="card" data-open="${esc(d.day)}" style="--c:${TOPICS[d.topic] || "var(--taxi)"}">
+      <span class="meta">Day ${esc(d.day)} · ${esc(d.topic)}</span>
+      <h3>${esc(d.title)}</h3>${d.note ? `<p>${esc(d.note)}</p>` : ""}</button>`).join("");
+}
+
+function renderFolders(){
+  const groups = Object.keys(TOPICS).filter(t => DAYS.some(d => d.topic === t));
+  if (!groups.length){ $("folders").innerHTML = `<p class="empty">Day 1 is coming soon.</p>`; return; }
+  $("folders").innerHTML = groups.map(t => {
+    const items = DAYS.filter(d => d.topic === t);
+    return `<details class="folder" style="--c:${TOPICS[t]}"><summary><span>${esc(t)}</span><span class="meta">${items.length} ${items.length === 1 ? "day" : "days"}</span></summary><ul>${items.map(d => `<li><button data-open="${esc(d.day)}">Day ${esc(d.day)}: ${esc(d.title)}</button></li>`).join("")}</ul></details>`;
+  }).join("");
+}
+
+function setView(v){
+  $("log").hidden = v !== "cards";
+  $("chips").hidden = v !== "cards";
+  $("folders").hidden = v !== "folders";
+  document.querySelectorAll(".view").forEach(b => b.setAttribute("aria-pressed", b.dataset.v === v));
+}
+$("views").addEventListener("click", e => { const b = e.target.closest(".view"); if (b) setView(b.dataset.v); });
+
+const dlg = $("dlg");
+function openDay(n){
+  const d = byDay[n]; if (!d) return;
+  $("dmeta").textContent = `Day ${d.day} · ${d.topic}`;
+  $("dtitle").textContent = d.title;
+  $("dbody").innerHTML = (d.body || d.note || "").split(/\n\s*\n/).filter(Boolean)
+    .map(p => `<p>${esc(p).replace(/\n/g, "<br>")}</p>`).join("") || `<p class="empty">No notes yet.</p>`;
+  $("dlink").hidden = !d.url;
+  if (d.url) $("dlink").href = d.url;
+  dlg.showModal();
+}
+document.addEventListener("click", e => { const o = e.target.closest("[data-open]"); if (o) openDay(+o.dataset.open); });
+$("dclose").addEventListener("click", () => dlg.close());
+dlg.addEventListener("click", e => { if (e.target === dlg) dlg.close(); });
+
+$("hub").innerHTML = HUB.map(h => `<a class="card" href="${esc(h.url)}" target="_blank" rel="noopener">
+  <span class="meta">${esc(h.meta)}</span><h3>${esc(h.title)}</h3><p>${esc(h.note)}</p></a>`).join("");
+
+renderChips(); renderLog(); renderFolders();
+</script>
+</body>
+</html>
